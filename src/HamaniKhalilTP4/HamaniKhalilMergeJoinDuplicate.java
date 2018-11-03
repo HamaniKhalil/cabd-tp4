@@ -1,13 +1,10 @@
 package HamaniKhalilTP4;
 
 import static HamaniKhalilTP4.SystemConfiguration.BUFFER_SIZE;
-
+import static HamaniKhalilTP4.SystemConfiguration.THE_NONE_CHARACTER;
 import static HamaniKhalilTP4.SystemErrors.MESSAGE_ARRAY_EXCEEDED_BUFFER_SIZE;
 
-import java.io.File;
 import java.util.Arrays;
-
-import HamaniKhalilTP4.FileManager;
 
 public class HamaniKhalilMergeJoinDuplicate {
 	
@@ -18,24 +15,18 @@ public class HamaniKhalilMergeJoinDuplicate {
 		char []	r	= FileManager.fileToArray(rFilename, rReadLevel);
 		char []	s	= FileManager.fileToArray(sFilename, sReadLevel);
 		
-		try {			
+		try {
 			while(s != null) {
 				while(r != null) {
-					FileManager.arrayToFile(mergeJoinDuplicate(s, r), rsFilename);					
+					FileManager.arrayToFile(mergeJoinDuplicate(s, r), rsFilename);
 					r	= FileManager.fileToArray(rFilename, ++ rReadLevel);
 				}
 				s	= FileManager.fileToArray(sFilename, ++ sReadLevel);
 			}
 			
-			// Create an empty file if the join returns no row
-			File	rsFile	= new File(rsFilename);
-			if(!rsFile.exists()) {
-				rsFile.createNewFile();
-			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
 	}
 	
 	public static char [] mergeJoinDuplicate(char [] r, char [] s) throws Exception {
@@ -43,18 +34,33 @@ public class HamaniKhalilMergeJoinDuplicate {
 			throw new Exception(MESSAGE_ARRAY_EXCEEDED_BUFFER_SIZE);
 		}
 		
+		
 		int	i	= 0;
 		int	j	= 0;
 		int	k	= 0;
 		
 		int rsIndex	= 0;
 		
-		char []	rs	= new char[BUFFER_SIZE];
+		/*
+		 * In the case where the two arrays are fully sized (meaning all the buffer size is used)
+		 * and similar with duplicate records the resulting join can't fit the buffer size
+		 * and the worst case scenario is a N x N sized RS array :
+		 * Example : Lets take a buffer size of 4
+		 * R	= {A, A, A, A}
+		 * S	= {A, A, A, A}
+		 * RS	= {A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A}
+		 * 
+		 * || R || = || S ||	= BUFFER_SIZE				= 4
+		 * || RS ||				= BUFFER_SIZE x BUFFER_SIZE = 16
+		 * 
+		 * A better solution is to evaluate the RS size before joining
+		 */
+		char []	rs	= new char[BUFFER_SIZE * BUFFER_SIZE];
 		
-		Arrays.sort(r);
-		Arrays.sort(s);
+		sort(r);
+		sort(s);
 		
-		while(i < r.length && j < s.length) {
+		while(i < r.length && j < s.length && r[i] != THE_NONE_CHARACTER && s[j] != THE_NONE_CHARACTER) {
 			if(r[i] == s[j]) {
 				k = j;
 				
@@ -76,5 +82,25 @@ public class HamaniKhalilMergeJoinDuplicate {
 		}
 		
 		return rs;
+	}
+	
+	// A naive sort method
+	private static void sort(char [] array) {
+		int	i	= 0;
+		int	j	= 1;
+		
+		char intermediate = THE_NONE_CHARACTER;
+		
+		while(i < array.length && array[i] != THE_NONE_CHARACTER) {
+			while(j < array.length && array[j] != THE_NONE_CHARACTER) {
+				if(array[i] > array[j]) {
+					intermediate	= array[i];
+					array[i]		= array[j];
+					array[j]		= intermediate;
+				}
+				j ++;
+			}
+			i ++;
+		}
 	}
 }

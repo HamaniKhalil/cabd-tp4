@@ -34,30 +34,33 @@ import static HamaniKhalilTP4.SystemConfiguration.THE_NONE_CHARACTER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 
 public class FileManager {
-private static final int	ELEMENT_INDEX		= 0;
-	
+
+	private static final int	ELEMENT_INDEX		= 0;
 	
 	public static final char [] fileToArray(String filename, int startAtLevel) {
 		int		startingIndex	= BUFFER_SIZE * startAtLevel;
+		
+		char []	result		= new char[BUFFER_SIZE];
+		int		tabIndex	= FIRST_ARRAY_ELEMENT_INDEX;
 		
 		try {
 			FileReader		inFR	= new FileReader(filename);
 			BufferedReader	inBR	= new BufferedReader(inFR);
 			
-			char []	result		= new char[BUFFER_SIZE];
-			int		tabIndex	= FIRST_ARRAY_ELEMENT_INDEX;
 			
 			String	line 	= null;
 			
 			gotoLevel(inBR, startingIndex);
 			
 			while(tabIndex < BUFFER_SIZE && (line = inBR.readLine()) != null) {
-				result[tabIndex ++] = line.charAt(ELEMENT_INDEX);
+				result[tabIndex ++] = (char) line.charAt(ELEMENT_INDEX);
 			}
+			
 			
 			inFR.close();
 			
@@ -66,20 +69,29 @@ private static final int	ELEMENT_INDEX		= 0;
 						result;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
+			result[0]	= 'E';
+			result[1]	= 'R';
+			result[2]	= 'R';
+			result[3]	= 'O';
+			result[4]	= 'R';
+			return result;
 		}
 		
 	}
 	
-	public static final void arrayToFile(char [] rs, String filename) throws Exception {
-		if(rs == null || rs.length > BUFFER_SIZE) {
-			return;
-		}
-		
+	public static final void arrayToFile(char [] rs, String filename) {
 		try {
+			File	rsFile	= new File(filename);
+			if(!rsFile.exists()) {
+				rsFile.createNewFile();
+			}
+			
+			if(rs == null) {
+				return;
+			}
+			
 			FileWriter		outFW	= new FileWriter(filename, true);
 			BufferedWriter	outBW	= new BufferedWriter(outFW);
-			
 			
 			// Checking if the file is empty before writing on it
 			FileReader		outFR	= new FileReader(filename);
@@ -108,13 +120,11 @@ private static final int	ELEMENT_INDEX		= 0;
 				else {
 					break;
 				}
-			}			
-			
+			}
 			outBW.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
 	}
 	
 	private static final void gotoLevel(BufferedReader br, int startingIndex) throws Exception {
